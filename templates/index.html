@@ -21,16 +21,98 @@
             padding: 10px;
             box-sizing: border-box;
         }
+        .city-management {
+            margin-bottom: 20px;
+        }
+        .city-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .city-list {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Weather Chat</h1>
+
+    <div class='city-management'>
+        <h3>City Management</h3>
+        <div class='current-city'>
+            <strong>Current City:</strong> <span id='current-city-display'>None</span>
+        </div>
+        <div class='city-controls'>
+            <input type='text' id='city-input' placeholder='Enter city name'>
+            <button onclick='addCity()'>Add City</button>
+            <button onclick='removeCity()'>Remove City</button>
+            <button onclick='setCurrentCity()'>Set Current City</button>
+        </div>
+        <div class='city-list'>
+            <h4>Available Cities:</h4>
+            <ul id='city-list'></ul>
+        </div>
+    </div>
+
     <div id='chat'></div>
     <input type='text' id='message' placeholder='Type your message here...'>
 
     <script>
         const chatElement = document.getElementById('chat');
         const messageInput = document.getElementById('message');
+        const cityInput = document.getElementById('city-input');
+        const currentCityDisplay = document.getElementById('current-city-display');
+        const cityListElement = document.getElementById('city-list');
+
+        async function updateCities() {
+            const response = await fetch('/cities');
+            const data = await response.json();
+            currentCityDisplay.textContent = data.current_city || 'None';
+            cityListElement.innerHTML = data.cities
+                .map(city => `<li>${city}</li>`)
+                .join('');
+        }
+
+        async function addCity() {
+            const cityName = cityInput.value.trim();
+            if (!cityName) return;
+
+            const response = await fetch('/cities', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ city_name: cityName })
+            });
+            await updateCities();
+            cityInput.value = '';
+        }
+
+        async function removeCity() {
+            const cityName = cityInput.value.trim();
+            if (!cityName) return;
+
+            const response = await fetch(`/cities/${cityName}`, {
+                method: 'DELETE'
+            });
+            await updateCities();
+            cityInput.value = '';
+        }
+
+        async function setCurrentCity() {
+            const cityName = cityInput.value.trim();
+            if (!cityName) return;
+
+            const response = await fetch('/cities/current', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ city_name: cityName })
+            });
+            await updateCities();
+            cityInput.value = '';
+        }
 
         messageInput.addEventListener('keypress', async (e) => {
             if (e.key === 'Enter') {
@@ -55,6 +137,9 @@
                 chatElement.scrollTop = chatElement.scrollHeight;
             }
         });
+
+        // Initial cities update
+        updateCities();
     </script>
 </body>
 </html>
