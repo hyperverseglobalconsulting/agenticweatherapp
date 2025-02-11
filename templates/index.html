@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat {
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 400px;
+            overflow-y: scroll;
+            margin-bottom: 20px;
+        }
+        input[type='text'] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weather Chat</h1>
+    <div id='chat'></div>
+    <input type='text' id='message' placeholder='Type your message here...'>
+
+    <script>
+        const chatElement = document.getElementById('chat');
+        const messageInput = document.getElementById('message');
+
+        messageInput.addEventListener('keypress', async (e) => {
+            if (e.key === 'Enter') {
+                const message = messageInput.value;
+                messageInput.value = '';
+
+                // Add user message to chat
+                chatElement.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+
+                // Get AI response
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+
+                // Add AI response to chat
+                chatElement.innerHTML += `<div><strong>AI:</strong> ${data.response}</div>`;
+                chatElement.scrollTop = chatElement.scrollHeight;
+            }
+        });
+    </script>
+</body>
+</html>
